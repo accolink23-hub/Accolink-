@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accolink | Chobe & Kasane Stays</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accolinkGreen: '#1b4d3e', // Dark Green
+                        accolinkBrown: '#8b5a2b', // Brown
+                        accolinkCream: '#fdfbf7', // Background
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom hide scrollbar for the image slider */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .animate-pop { animation: transition-up 0.3s ease-out; }
+        @keyframes transition-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-accolinkCream text-gray-900 font-sans">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 1. DATABASE CONNECTION
+        // Replace these with your actual keys from Supabase Project Settings > API
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'; 
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 2. COMPONENTS
+        
+        function Navbar() {
+            return (
+                <header class="bg-accolinkGreen text-white p-4 sticky top-0 z-50 shadow-lg">
+                    <div class="max-w-6xl mx-auto flex justify-between items-center">
+                        <div>
+                            <h1 class="text-2xl font-bold tracking-tighter">Accolink<span class="text-accolinkBrown">.com</span></h1>
+                            <p class="text-[9px] uppercase tracking-widest text-green-200">Kasane Guest Houses</p>
+                        </div>
+                        <button class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition">
+                            Sign In (Optional)
+                        </button>
+                    </div>
+                </header>
+            );
+        }
+
+        function ImageSlider({ images }) {
+            if (!images || images.length === 0) return <div class="h-40 bg-gray-200 flex items-center justify-center text-gray-400">No Image</div>;
+
+            return (
+                <div class="relative group h-44 w-full overflow-hidden">
+                    <div class="flex overflow-x-auto snap-x snap-mandatory h-full no-scrollbar">
+                        {images.map((img, i) => (
+                            <img key={i} src={img} class="w-full h-full object-cover flex-shrink-0 snap-center" />
+                        ))}
+                    </div>
+                    <div class="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded">
+                        Swipe for {images.length} photos
+                    </div>
+                </div>
+            );
+        }
+
+        function HouseCard({ house, onOpen }) {
+            return (
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full animate-pop">
+                    <ImageSlider images={house.images} />
+                    
+                    <div class="p-3 flex flex-col flex-grow">
+                        <h3 class="font-bold text-accolinkGreen text-base truncate">{house.name}</h3>
+                        
+                        <div class="flex items-center text-gray-500 text-xs mb-3 mt-1">
+                            <i class="fa-solid fa-location-dot text-accolinkBrown mr-1"></i>
+                            <span class="truncate">{house.location}</span>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="flex justify-between items-end">
+                                <span class="text-accolinkGreen font-bold text-lg">P{house.price}<span class="text-[10px] font-normal text-gray-400">/night</span></span>
+                            </div>
+                            <button 
+                                onClick={() => onOpen(house)}
+                                class="w-full mt-3 bg-accolinkBrown text-white py-2 rounded-lg text-xs font-bold hover:brightness-110 transition"
+                            >
+                                Explore More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function DetailModal({ house, onClose }) {
+            if (!house) return null;
+            const waLink = `https://wa.me/${house.phone}?text=I am interested in ${house.name} on Accolink. Is it available?`;
+
+            return (
+                <div class="fixed inset-0 bg-black/80 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+                    <div class="bg-white w-full max-w-lg h-[90vh] sm:h-auto sm:rounded-2xl overflow-y-auto relative animate-pop" onClick={e => e.stopPropagation()}>
+                        
+                        <button onClick={onClose} class="absolute top-4 right-4 z-10 bg-white p-2 rounded-full shadow-lg">
+                            <i class="fa-solid fa-xmark text-red-600 text-xl"></i>
+                        </button>
+
+                        <div class="h-64 sm:h-80 bg-gray-100 flex overflow-x-auto snap-x snap-mandatory no-scrollbar">
+                            {house.images?.map((img, i) => (
+                                <img key={i} src={img} class="w-full h-full object-cover flex-shrink-0 snap-center" />
+                            ))}
+                        </div>
+
+                        <div class="p-6 pb-28">
+                            <h2 class="text-2xl font-bold text-accolinkGreen">{house.name}</h2>
+                            <p class="text-gray-500 flex items-center gap-2 text-sm mt-1">
+                                <i class="fa-solid fa-location-arrow text-accolinkBrown"></i> {house.location}
+                            </p>
+
+                            <div class="my-6">
+                                <h4 class="font-bold text-sm uppercase text-gray-400 tracking-widest mb-3">Amenities</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    {house.amenities?.map((item, i) => (
+                                        <span key={i} class="bg-green-50 text-accolinkGreen border border-green-100 px-3 py-1 rounded-full text-xs font-medium">
+                                            {item}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <h4 class="font-bold text-sm uppercase text-gray-400 tracking-widest mb-2">About this place</h4>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">{house.description}</p>
+
+                            {/* Bottom Action Bar */}
+                            <div class="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex gap-3 sm:absolute sm:rounded-b-2xl">
+                                <a href={waLink} target="_blank" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-green-700">
+                                    <i class="fa-brands fa-whatsapp text-xl"></i> Call Now
+                                </a>
+                                <button class="flex-1 bg-accolinkBrown text-white py-3 rounded-xl font-bold hover:brightness-110">
+                                    Book Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 3. MAIN APPLICATION
+        function App() {
+            const [houses, setHouses] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [selectedHouse, setSelectedHouse] = useState(null);
+            const [limit, setLimit] = useState(10); // Vertical limit of 10
+            const [searchTerm, setSearchTerm] = useState("");
+
+            useEffect(() => {
+                loadGuesthouses();
+            }, [limit, searchTerm]);
+
+            async function loadGuesthouses() {
+                setLoading(true);
+                try {
+                    let query = supabase
+                        .from('guesthouses') // This is the table name we agreed on
+                        .select('*')
+                        .limit(limit)
+                        .order('created_at', { ascending: false });
+
+                    if (searchTerm) {
+                        query = query.ilike('name', `%${searchTerm}%`);
+                    }
+
+                    const { data, error } = await query;
+                    if (error) throw error;
+                    setHouses(data || []);
+                } catch (err) {
+                    console.error("Error loading data:", err.message);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            return (
+                <div class="min-h-screen">
+                    <Navbar />
+                    
+                    {/* Search Section */}
+                    <div class="bg-accolinkGreen p-4 pb-8 rounded-b-[40px] shadow-inner">
+                        <div class="max-w-md mx-auto relative">
+                            <input 
+                                type="text" 
+                                placeholder="Where would you like to stay?" 
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                class="w-full p-4 pl-12 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-accolinkBrown"
+                            />
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-5 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <main class="max-w-6xl mx-auto p-4 -mt-4">
+                        {/* Grid: 2 columns on mobile, 4 on desktop */}
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {houses.map(h => (
+                                <HouseCard key={h.id} house={h} onOpen={setSelectedHouse} />
+                            ))}
+                        </div>
+
+                        {/* Loading Spinner */}
+                        {loading && (
+                            <div class="flex justify-center py-10">
+                                <i class="fa-solid fa-spinner fa-spin text-3xl text-accolinkGreen"></i>
+                            </div>
+                        )}
+
+                        {/* Explore More Feature */}
+                        {!loading && houses.length >= limit && (
+                            <div class="flex justify-center mt-10 mb-20">
+                                <button 
+                                    onClick={() => setLimit(prev => prev + 10)}
+                                    class="bg-white border-2 border-accolinkGreen text-accolinkGreen px-8 py-3 rounded-full font-bold hover:bg-accolinkGreen hover:text-white transition"
+                                >
+                                    Explore More Guesthouses
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!loading && houses.length === 0 && (
+                            <div class="text-center py-20 opacity-50">
+                                <i class="fa-solid fa-house-chimney-crack text-5xl mb-4"></i>
+                                <p>No guest houses found in Kasane yet.</p>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Pop-up Modal */}
+                    {selectedHouse && (
+                        <DetailModal house={selectedHouse} onClose={() => setSelectedHouse(null)} />
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
