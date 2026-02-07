@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accolink | Chobe & Kasane Stays</title>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -46,14 +54,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // 1. DATABASE CONNECTION
-        // Replace these with your actual keys from Supabase Project Settings > API
+        // 2. DATABASE CONNECTION
+        // Replace these with your actual keys from Supabase
         const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'; 
         const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 2. COMPONENTS
-        
+        // 3. COMPONENTS
         function Navbar() {
             return (
                 <header class="bg-accolinkGreen text-white p-4 sticky top-0 z-50 shadow-lg">
@@ -169,12 +176,12 @@
             );
         }
 
-        // 3. MAIN APPLICATION
+        // 4. MAIN APPLICATION
         function App() {
             const [houses, setHouses] = useState([]);
             const [loading, setLoading] = useState(true);
             const [selectedHouse, setSelectedHouse] = useState(null);
-            const [limit, setLimit] = useState(10); // Vertical limit of 10
+            const [limit, setLimit] = useState(10); 
             const [searchTerm, setSearchTerm] = useState("");
 
             useEffect(() => {
@@ -185,7 +192,7 @@
                 setLoading(true);
                 try {
                     let query = supabase
-                        .from('guesthouses') // This is the table name we agreed on
+                        .from('guesthouses')
                         .select('*')
                         .limit(limit)
                         .order('created_at', { ascending: false });
@@ -222,21 +229,18 @@
                     </div>
 
                     <main class="max-w-6xl mx-auto p-4 -mt-4">
-                        {/* Grid: 2 columns on mobile, 4 on desktop */}
                         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {houses.map(h => (
                                 <HouseCard key={h.id} house={h} onOpen={setSelectedHouse} />
                             ))}
                         </div>
 
-                        {/* Loading Spinner */}
                         {loading && (
                             <div class="flex justify-center py-10">
                                 <i class="fa-solid fa-spinner fa-spin text-3xl text-accolinkGreen"></i>
                             </div>
                         )}
 
-                        {/* Explore More Feature */}
                         {!loading && houses.length >= limit && (
                             <div class="flex justify-center mt-10 mb-20">
                                 <button 
@@ -248,7 +252,6 @@
                             </div>
                         )}
 
-                        {/* Empty State */}
                         {!loading && houses.length === 0 && (
                             <div class="text-center py-20 opacity-50">
                                 <i class="fa-solid fa-house-chimney-crack text-5xl mb-4"></i>
@@ -257,7 +260,6 @@
                         )}
                     </main>
 
-                    {/* Pop-up Modal */}
                     {selectedHouse && (
                         <DetailModal house={selectedHouse} onClose={() => setSelectedHouse(null)} />
                     )}
