@@ -21,7 +21,7 @@ async function router() {
 async function showHome() {
   app.innerHTML = `<div class="container">Loading guesthouses...</div>`;
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseclient
     .from("guesthouses")
     .select(`
       *,
@@ -75,7 +75,7 @@ function renderGuesthouses() {
 async function showGuesthouse(id) {
   app.innerHTML = `<div class="container">Loading...</div>`;
 
-  const { data: guesthouse, error } = await supabase
+  const { data: guesthouse, error } = await supabaseclient
     .from("guesthouses")
     .select("*")
     .eq("id", id)
@@ -86,12 +86,12 @@ async function showGuesthouse(id) {
     return;
   }
 
-  const { data: rooms } = await supabase
+  const { data: rooms } = await supabaseclient 
     .from("rooms")
     .select("*")
     .eq("guesthouse_id", id);
 
-  const { data: images } = await supabase
+  const { data: images } = await supabaseclient 
     .from("images")
     .select("*")
     .eq("guesthouse_id", id)
